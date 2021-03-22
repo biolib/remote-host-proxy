@@ -1,0 +1,30 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen 80;
+        listen 443 ssl;
+        ssl_certificate_key /etc/nginx/key.pem;
+        ssl_certificate /etc/nginx/cert.pem;
+        server_name _;
+        return 403; # reject every connection by default
+    }
+
+    # unless it matches this server clause
+    server {
+        include allowed_server_name.conf;
+        include dns.conf;
+        listen 80;
+        listen 443 ssl;
+        ssl_certificate_key /etc/nginx/key.pem;
+        ssl_certificate /etc/nginx/cert.pem;
+        client_max_body_size 0;
+
+        location / {
+            proxy_ssl_server_name on;
+            proxy_pass $scheme://$host$request_uri;
+        }
+    }
+}
